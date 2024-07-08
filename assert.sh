@@ -52,6 +52,7 @@ assert_eq() {
   local msg="${3-}"
 
   if [ "$expected" == "$actual" ]; then
+    log_success "$expected == $actual :: $msg" || true
     return 0
   else
     [ "${#msg}" -gt 0 ] && log_failure "$expected == $actual :: $msg" || true
@@ -161,6 +162,12 @@ assert_not_empty() {
   return "$?"
 }
 
+function join_by() {
+  local IFS="$1";
+  shift;
+  echo "$*";
+  }
+
 assert_contain() {
   local haystack="$1"
   local needle="${2-}"
@@ -171,9 +178,10 @@ assert_contain() {
   fi
 
   if [ -z "${haystack##*$needle*}" ]; then
+    log_success "[$(join_by "," $haystack)] contains $needle :: $msg" || true
     return 0
   else
-    [ "${#msg}" -gt 0 ] && log_failure "$haystack doesn't contain $needle :: $msg" || true
+    [ "${#msg}" -gt 0 ] && log_failure "Array [$(join_by "," $haystack)] doesn't contain $needle :: $msg" || true
     return 1
   fi
 }
@@ -187,7 +195,13 @@ assert_not_contain() {
     return 0;
   fi
 
+  if [ -z "$haystack" ]; then
+    log_success "Array [$(join_by "," $haystack)] doesn't contain $needle :: $msg" || true
+    return 0;
+  fi
+
   if [ "${haystack##*$needle*}" ]; then
+    log_success "Array [$(join_by "," $haystack)] doesn't contain $needle :: $msg" || true
     return 0
   else
     [ "${#msg}" -gt 0 ] && log_failure "$haystack contains $needle :: $msg" || true
